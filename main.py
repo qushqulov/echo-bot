@@ -1,49 +1,66 @@
 import os
-
 from dotenv import load_dotenv
 
-from telegram.ext import Updater, CallbackContext, CommandHandler, MessageHandler, Filters
 from telegram import Update
-
+from telegram.ext import (
+    ApplicationBuilder,
+    ContextTypes,
+    CommandHandler,
+    MessageHandler,
+    filters,
+)
 
 load_dotenv()
 
 
-def start(update: Update, context: CallbackContext):
-    update.message.reply_text(text='Assalomu alaykum!')
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text("Assalomu alaykum!")
 
 
-def randomcat(update: Update, context: CallbackContext):
-    update.message.reply_photo(photo='https://cataas.com/cat')
+async def randomcat(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_photo("https://cataas.com/cat")
 
 
-def greet(update: Update, context: CallbackContext):
-    command, name = update.message.text.split(' ')
-    update.message.reply_text(f'salom {name}')
+async def greet(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    command, name = update.message.text.split(" ")
+    await update.message.reply_text(f"salom {name}")
 
 
-def calc(update: Update, context: CallbackContext):
-    command, expression = update.message.text.split(' ')
-    # shu yerda yozing
+async def calc(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    command, operand01, operator, operand02 = update.message.text.split(" ")
+
+    result = "xatolik berdi"
+
+    if operator == "+":
+        result = str(int(operand01) + int(operand02))
+    elif operator == "-":
+        result = str(int(operand01) - int(operand02))
+    elif operator == "*":
+        result = str(int(operand01) * int(operand02))
+    elif operator == "/":
+        if int(operand02) == 0:
+            result = "nolga bolish mumkin emas"
+        else:
+            result = str(int(operand01) / int(operand02))
+
+    await update.message.reply_text(result)
 
 
-def echo(update: Update, context: CallbackContext):
-    update.message.reply_text(text=update.message.text)
+async def echo(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text(update.message.text)
 
 
-def main() -> None:
-    updater = Updater(os.getenv('TOKEN'))
-    dispatcher = updater.dispatcher
+def main():
+    app = ApplicationBuilder().token(os.getenv("TOKEN")).build()
 
-    dispatcher.add_handler(CommandHandler('start', start))
-    dispatcher.add_handler(CommandHandler('randomcat', randomcat))
-    dispatcher.add_handler(CommandHandler('greet', greet))
-    dispatcher.add_handler(CommandHandler('calc', calc)) # /calc 3 + 5
+    app.add_handler(CommandHandler("start", start))
+    app.add_handler(CommandHandler("randomcat", randomcat))
+    app.add_handler(CommandHandler("greet", greet))
+    app.add_handler(CommandHandler("calc", calc))
 
-    dispatcher.add_handler(MessageHandler(Filters.text, echo))
+    app.add_handler(MessageHandler(filters.TEXT, echo))
 
-    updater.start_polling()
-    updater.idle()
+    app.run_polling()
 
 
 main()
